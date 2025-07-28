@@ -37,27 +37,36 @@ using (var scope = app.Services.CreateScope())
         await context.SaveChangesAsync();
     }
 
-    var order = new Order
+    if(!await context.Orders.AnyAsync())
     {
-        CustomerName = "Acme Corp",
-        DatePlaced = DateTime.Now
-    };
+        Console.WriteLine("Don't found any orders");
+        var order = new Order
+        {
+            CustomerName = "Acme Corp",
+            DatePlaced = DateTime.Now
+        };
 
-    var getItem = await context.InventoryItems.FirstOrDefaultAsync();
+        var getItem = await context.InventoryItems.FirstOrDefaultAsync();
 
-    if (getItem != null)
-    {
-        order.AddItem(getItem);
-        await context.Orders.AddAsync(order);
-        await context.SaveChangesAsync();
-        Console.WriteLine(order.GetOrderSummary());
+        if (getItem != null)
+        {
+            order.AddItem(getItem);
+            await context.Orders.AddAsync(order);
+            await context.SaveChangesAsync();
+            // Console.WriteLine(order.GetOrderSummary());
+        }
     }
 
     // Retrieve and print inventory to confirm
-        var items = context.InventoryItems.ToList();
+    var items = context.InventoryItems.ToList();
     foreach (var item in items)
     {
         item.DisplayInfo(); // Should print: Item: Pallet Jack | Quantity: 12 | Location: Warehouse A
+    }
+    
+    foreach (var ord in context.Orders.ToList())
+    {
+        Console.WriteLine(ord.GetOrderSummary());
     }
 }
 

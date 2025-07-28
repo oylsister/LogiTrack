@@ -14,7 +14,7 @@ namespace LogiTrack.Models
 
         [Required]
         [DataType(DataType.Date)]
-        public required DateTime DatePlaced { get; set; }
+        public DateTime DatePlaced { get; set; }
         public List<InventoryItem> ItemList { get; set; } = [];
 
         public void AddItem(InventoryItem item)
