@@ -1,0 +1,7 @@
+/LogiTrack/bin
+/LogiTrack/Migrations
+/LogiTrack/obj
+*.db
+*.db-shm
+*.db-wal
+/LogiTrack/.config
