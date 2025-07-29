@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace LogiTrack.Models
 {
@@ -16,10 +17,9 @@ namespace LogiTrack.Models
         [Required]
         public int Quantity { get; set; }
         public string? Location { get; set; }
-        public int? OrderId { get; set; }
-        
-        [ForeignKey("OrderId")]
-        public Order? Order { get; set; }        
+
+        [JsonIgnore]
+        public List<OrderItem> OrderItems { get; set; } = [];
 
         public void DisplayInfo()
         {

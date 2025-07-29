@@ -20,7 +20,10 @@ namespace LogiTrack.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllOrders()
         {
-            var allItem = await _context.Orders.ToListAsync();
+            var allItem = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.InventoryItem)
+                .ToListAsync();
 
             if (allItem == null || !allItem.Any())
                 return NotFound("No orders found.");
@@ -31,7 +34,10 @@ namespace LogiTrack.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrderById(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.InventoryItem)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null)
                 return NotFound($"Order with ID {id} not found.");
@@ -49,7 +55,7 @@ namespace LogiTrack.Controllers
             {
                 CustomerName = newOrder.CustomerName,
                 DatePlaced = newOrder.OrderDate ?? DateTime.UtcNow,
-                ItemList = new List<InventoryItem>()
+                OrderItems = new List<OrderItem>()
             };
 
             foreach (var itemDto in newOrder.Items)
@@ -62,7 +68,7 @@ namespace LogiTrack.Controllers
                     return BadRequest($"Insufficient quantity for item {item.Name}. Available: {item.Quantity}, Requested: {itemDto.Quantity}");
 
                 item.Quantity -= itemDto.Quantity; // Deduct the quantity from inventory
-                order.AddItem(item); // Add the item to the order
+                order.AddItem(item, itemDto.Quantity); // Add the item to the order
             }
 
             await _context.Orders.AddAsync(order);

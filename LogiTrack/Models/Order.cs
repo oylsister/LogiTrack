@@ -15,36 +15,43 @@ namespace LogiTrack.Models
         [Required]
         [DataType(DataType.Date)]
         public DateTime DatePlaced { get; set; }
-        public List<InventoryItem> ItemList { get; set; } = [];
+        public List<OrderItem> OrderItems { get; set; } = [];
 
-        public void AddItem(InventoryItem item)
+        public void AddItem(InventoryItem item, int Quantity)
         {
             ArgumentNullException.ThrowIfNull(item);
 
-            item.Order = this;
-            item.OrderId = this.OrderId;
-            ItemList.Add(item);
+            var orderItem = new OrderItem
+            {
+                Order = this,
+                OrderId = this.OrderId,
+                InventoryItem = item,
+                InventoryItemId = item.ItemId,
+                Quantity = Quantity
+            };
+
+            OrderItems.Add(orderItem);
         }
 
         public bool RemoveItem(int itemId)
         {
             if (itemId <= 0) return false;
 
-            var itemToRemove = ItemList.FirstOrDefault(item => item.ItemId == itemId);
+            var itemToRemove = OrderItems.FirstOrDefault(item => item.InventoryItemId == itemId);
             if (itemToRemove == null) return false;
 
-            return ItemList.Remove(itemToRemove);
+            return OrderItems.Remove(itemToRemove);
         }
 
         public string GetOrderSummary()
         {
-            int totalQuantity = ItemList.Sum(i => i.Quantity);
-            string itemNames = string.Join(", ", ItemList.Select(i => i.Name).Take(3));
+            int totalQuantity = OrderItems.Sum(i => i.Quantity);
+            string itemNames = string.Join(", ", OrderItems.Select(i => i.InventoryItem.Name).Take(3));
 
-            if (ItemList.Count > 3)
+            if (OrderItems.Count > 3)
                 itemNames += "...";
 
-            return $"Order #{OrderId} | Customer: {CustomerName} | Items: {ItemList.Count} (Qty: {totalQuantity}) | " +
+            return $"Order #{OrderId} | Customer: {CustomerName} | Items: {OrderItems.Count} (Qty: {totalQuantity}) | " +
                 $"Products: {itemNames} | Placed: {DatePlaced:M/d/yyyy}";
         }
     }

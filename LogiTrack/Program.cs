@@ -14,6 +14,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<LogiTrackContext>();
 
+// Add this after your other service configurations
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        //options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.MaxDepth = 64; // Increase max depth if needed
+    });
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -50,7 +58,7 @@ using (var scope = app.Services.CreateScope())
 
         if (getItem != null)
         {
-            order.AddItem(getItem);
+            order.AddItem(getItem, 2);
             await context.Orders.AddAsync(order);
             await context.SaveChangesAsync();
             // Console.WriteLine(order.GetOrderSummary());

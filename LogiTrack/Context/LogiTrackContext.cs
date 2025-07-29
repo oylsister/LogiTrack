@@ -14,11 +14,15 @@ namespace LogiTrack.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Order>()
-                .HasMany(o => o.ItemList)
-                .WithOne(i => i.Order)
-                .HasForeignKey(i => i.OrderId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(i => i.OrderId);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.InventoryItem)
+                .WithMany(i => i.OrderItems)
+                .HasForeignKey(oi => oi.InventoryItemId);
                 
             base.OnModelCreating(modelBuilder);
         }
