@@ -31,6 +31,17 @@ namespace LogiTrack.Controllers
             return Ok(allItem);
         }
 
+        [HttpGet("allitems")]
+        public async Task<IActionResult> GetAllItemFromAllOrders()
+        {
+            var allitem = await _context.OrderItems.ToListAsync();
+
+            if (allitem == null || !allitem.Any())
+                return NotFound("No item found.");
+
+            return Ok(allitem);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrderById(int id)
         {
