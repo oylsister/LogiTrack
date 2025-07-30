@@ -1,5 +1,6 @@
 using LogiTrack.Context;
 using LogiTrack.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -21,6 +22,9 @@ builder.Services.AddControllers()
         //options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
         options.JsonSerializerOptions.MaxDepth = 64; // Increase max depth if needed
     });
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<LogiTrackContext>();
 
 var app = builder.Build();
 

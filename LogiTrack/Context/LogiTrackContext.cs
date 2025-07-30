@@ -1,9 +1,10 @@
 using LogiTrack.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace LogiTrack.Context
 {
-    public class LogiTrackContext : DbContext
+    public class LogiTrackContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<InventoryItem> InventoryItems { get; set; }
         public DbSet<Order> Orders { get; set; }
