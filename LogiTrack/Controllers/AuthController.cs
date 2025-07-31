@@ -82,13 +82,13 @@ namespace LogiTrack.Controllers
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT:Key") ?? "YourSuperSecretKeyHere123456789012345"));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JWT:Issuer"],
-                audience: _configuration["JWT:Audience"],
+                issuer: Environment.GetEnvironmentVariable("JWT:Issuer"),
+                audience: Environment.GetEnvironmentVariable("JWT:Audience"),
                 claims: claims,
                 expires: DateTime.Now.AddDays(7), // Token valid for 7 days
                 signingCredentials: creds

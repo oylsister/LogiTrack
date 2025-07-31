@@ -14,6 +14,17 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
+var root = builder.Environment.ContentRootPath;
+Console.WriteLine($"Root path: {root}");
+var dotEnv = Path.Combine(root, ".env");
+if (File.Exists(dotEnv))
+{
+    Console.WriteLine($"Loading environment variables from {dotEnv}");
+    DotNetEnv.Env.Load(dotEnv);
+
+    builder.Configuration.AddEnvironmentVariables();
+}
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -43,10 +54,10 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["JWT:Issuer"],
-        ValidAudience = builder.Configuration["JWT:Audience"],
+        ValidIssuer = Environment.GetEnvironmentVariable("JWT:Issuer"),
+        ValidAudience = Environment.GetEnvironmentVariable("JWT:Audience"),
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"] ?? "YourSuperSecretKeyHere123456789012345"))
+            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT:Key") ?? "YourSuperSecretKeyHere123456789012345"))
     };
 });
 
