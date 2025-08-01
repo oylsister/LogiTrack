@@ -4,3 +4,13 @@ GET {{LogiTrack_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+POST http://localhost:5253/api/Auth/login/
+Accept: application/json
+Content-Type: application/json
+
+{
+
+}
+###
+GET {{LogiTrack_HostAddress}}/api/inventory/
+Authorization: Bearer

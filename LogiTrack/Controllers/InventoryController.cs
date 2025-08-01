@@ -1,5 +1,6 @@
 using LogiTrack.Context;
 using LogiTrack.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ namespace LogiTrack.Controllers
         }
 
         // GET: Inventory
+        [Authorize(Roles = "Manager")]
         [HttpGet]
         public async Task<IActionResult> InventoryList()
         {

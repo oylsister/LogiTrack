@@ -22,8 +22,14 @@ if (File.Exists(dotEnv))
     Console.WriteLine($"Loading environment variables from {dotEnv}");
     DotNetEnv.Env.Load(dotEnv);
 
+    Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Key")}");
+    Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Issuer")}");
+    Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Audience")}");
+
     builder.Configuration.AddEnvironmentVariables();
 }
+
+Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -39,7 +45,8 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<LogiTrackContext>();
+    .AddEntityFrameworkStores<LogiTrackContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -54,10 +61,19 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = Environment.GetEnvironmentVariable("JWT:Issuer"),
-        ValidAudience = Environment.GetEnvironmentVariable("JWT:Audience"),
+        ValidIssuer = Environment.GetEnvironmentVariable("JWT__Issuer"),
+        ValidAudience = Environment.GetEnvironmentVariable("JWT__Audience"),
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT:Key") ?? "YourSuperSecretKeyHere123456789012345"))
+            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT__Key") ?? "YourSuperSecretKeyHere123456789012345"))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -132,6 +148,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
+
+app.UseAuthentication(); // Must come before UseAuthorization
+app.UseAuthorization();
 
 app.MapControllers();
 

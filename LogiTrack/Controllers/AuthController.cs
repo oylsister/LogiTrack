@@ -15,18 +15,27 @@ namespace LogiTrack.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signinManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
         {
             _userManager = userManager;
             _signinManager = signInManager;
+            _roleManager = roleManager;
             _configuration = configuration;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError(string.Empty, "Username already exists");
+                return BadRequest(ModelState);
+            }
+
             var user = new ApplicationUser
             {
                 UserName = model.Username,
@@ -36,7 +45,37 @@ namespace LogiTrack.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
-                return Ok("User registered successfully");
+            {
+                // Ensure roles exist
+                string roleName = user.UserName == "manager" ? "Manager" : "User";
+
+                if (!await _roleManager.RoleExistsAsync(roleName))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(roleName));
+                }
+
+                // Assign the role
+                var roleResult = await _userManager.AddToRoleAsync(user, roleName);
+
+                if (!roleResult.Succeeded)
+                {
+                    // Log the error properly
+                    foreach (var error in roleResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, $"Role assignment failed: {error.Description}");
+                    }
+                    return BadRequest(ModelState);
+                }
+
+                // Generate token for immediate login
+                var token = GenerateJwtToken(user);
+
+                return Ok(new
+                {
+                    message = $"User registered successfully as {roleName}",
+                    token
+                });
+            }
 
             foreach (var error in result.Errors)
             {
@@ -80,17 +119,18 @@ namespace LogiTrack.Controllers
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
+                Console.WriteLine($"User has role: {role}");
             }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT:Key") ?? "YourSuperSecretKeyHere123456789012345"));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT__Key") ?? "YourSuperSecretKeyHere123456789012345"));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: Environment.GetEnvironmentVariable("JWT:Issuer"),
-                audience: Environment.GetEnvironmentVariable("JWT:Audience"),
+                issuer: Environment.GetEnvironmentVariable("JWT__Issuer"),
+                audience: Environment.GetEnvironmentVariable("JWT__Audience"),
                 claims: claims,
-                expires: DateTime.Now.AddDays(7), // Token valid for 7 days
+                expires: DateTime.UtcNow.AddMinutes(10), // Token valid for 7 days
                 signingCredentials: creds
             );
 
