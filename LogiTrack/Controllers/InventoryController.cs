@@ -18,7 +18,6 @@ namespace LogiTrack.Controllers
         }
 
         // GET: Inventory
-        [Authorize(Roles = "Manager")]
         [HttpGet]
         public async Task<IActionResult> InventoryList()
         {
@@ -42,6 +41,7 @@ namespace LogiTrack.Controllers
             return Ok(item);
         }
 
+        [Authorize(Roles = "Manager")]
         [HttpPost]
         public async Task<IActionResult> AddInventoryItem([FromBody] InventoryItem newItem)
         {
@@ -77,6 +77,7 @@ namespace LogiTrack.Controllers
         }
         */
 
+        [Authorize(Roles = "Manager")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateInventoryItem([FromRoute] int id, [FromBody] InventoryItem updatedItem)
         {
@@ -115,6 +116,7 @@ namespace LogiTrack.Controllers
             }
         }
 
+        [Authorize(Roles = "Manager")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInventoryItem(int id)
         {

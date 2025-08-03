@@ -1,6 +1,7 @@
 using LogiTrack.Context;
 using LogiTrack.DTO;
 using LogiTrack.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ namespace LogiTrack.Controllers
             _context = context;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllOrders()
         {
@@ -31,6 +33,7 @@ namespace LogiTrack.Controllers
             return Ok(allItem);
         }
 
+        [Authorize]
         [HttpGet("allitems")]
         public async Task<IActionResult> GetAllItemFromAllOrders()
         {
@@ -42,6 +45,7 @@ namespace LogiTrack.Controllers
             return Ok(allitem);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrderById(int id)
         {
@@ -56,6 +60,7 @@ namespace LogiTrack.Controllers
             return Ok(order);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDto newOrder)
         {
@@ -88,6 +93,7 @@ namespace LogiTrack.Controllers
             return CreatedAtAction(nameof(GetOrderById), new { id = order.OrderId }, order);
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
