@@ -101,6 +101,7 @@ namespace LogiTrack.Controllers
             }
             
             var token = GenerateJwtToken(user);
+            // var roles = _userManager.GetRolesAsync(user).Result;
             
             return Ok(new { token });
         }
@@ -111,15 +112,13 @@ namespace LogiTrack.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName!),
-                new Claim(ClaimTypes.Email, user.Email!)
             };
 
-            // Add roles if needed
             var roles = _userManager.GetRolesAsync(user).Result;
+
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
-                Console.WriteLine($"User has role: {role}");
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT__Key") ?? "YourSuperSecretKeyHere123456789012345"));
