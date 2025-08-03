@@ -67,13 +67,12 @@ namespace LogiTrack.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Generate token for immediate login
-                var token = GenerateJwtToken(user);
+                // Generate token for immediate login, but most of the site simply just need you to login again to ensure you're not some sort of bitch try to hack their site.
+                // var token = GenerateJwtToken(user);
 
                 return Ok(new
                 {
-                    message = $"User registered successfully as {roleName}",
-                    token
+                    message = $"User {model.Username} registered successfully as {roleName}"
                 });
             }
 
