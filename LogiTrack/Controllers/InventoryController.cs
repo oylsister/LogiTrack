@@ -3,6 +3,7 @@ using LogiTrack.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace LogiTrack.Controllers
 {
@@ -11,20 +12,41 @@ namespace LogiTrack.Controllers
     public class InventoryController : ControllerBase
     {
         private readonly LogiTrackContext _context;
+        private readonly IMemoryCache _cache;
 
-        public InventoryController(LogiTrackContext context)
+        public InventoryController(LogiTrackContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         // GET: Inventory
         [HttpGet]
         public async Task<IActionResult> InventoryList()
         {
+            if (_cache.TryGetValue("InventoryItems", out List<InventoryItem>? cachedItems))
+            {
+                // Cache hit
+                if (cachedItems != null)
+                {
+                    //Console.WriteLine("Found in cache");
+                    return Ok(cachedItems);
+                }
+            }
+
             var inventoryItems = await _context.InventoryItems.ToListAsync();
 
             if (inventoryItems == null || !inventoryItems.Any())
                 return NotFound("No inventory items found.");
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromSeconds(30))
+                .SetPriority(CacheItemPriority.Normal)
+                .SetSize(1024);
+
+            // Store in cache
+            _cache.Set("InventoryItems", inventoryItems, cacheOptions);
+            //Console.WriteLine("Create in cache");
 
             return Ok(inventoryItems);
         }
@@ -50,6 +72,21 @@ namespace LogiTrack.Controllers
 
             await _context.InventoryItems.AddAsync(newItem);
             await _context.SaveChangesAsync();
+
+            if (_cache.TryGetValue("InventoryItems", out List<InventoryItem>? cachedItems) && cachedItems != null)
+            {
+                cachedItems.Add(newItem);
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(30))
+                    .SetPriority(CacheItemPriority.Normal)
+                    .SetSize(1024);
+                _cache.Set("InventoryItems", cachedItems, cacheOptions);
+            }
+            else
+            {
+                // If cache doesn't exist, don't worry about it
+                _cache.Remove("InventoryItems");
+            }
 
             return CreatedAtAction(nameof(InventoryList), new { id = newItem.ItemId }, newItem);
         }
@@ -107,6 +144,8 @@ namespace LogiTrack.Controllers
                 _context.InventoryItems.Update(existingItem);
                 await _context.SaveChangesAsync();
 
+                _cache.Remove("InventoryItems");
+
                 return Ok(existingItem);
             }
             catch (Exception ex)
@@ -127,6 +166,8 @@ namespace LogiTrack.Controllers
 
             _context.InventoryItems.Remove(item);
             await _context.SaveChangesAsync();
+
+            _cache.Remove("InventoryItems");
 
             return NoContent();
         }

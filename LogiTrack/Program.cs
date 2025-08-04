@@ -14,17 +14,19 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddMemoryCache();
+
 var root = builder.Environment.ContentRootPath;
-Console.WriteLine($"Root path: {root}");
+//Console.WriteLine($"Root path: {root}");
 var dotEnv = Path.Combine(root, ".env");
 if (File.Exists(dotEnv))
 {
     Console.WriteLine($"Loading environment variables from {dotEnv}");
     DotNetEnv.Env.Load(dotEnv);
 
-    Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Key")}");
-    Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Issuer")}");
-    Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Audience")}");
+    //Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Key")}");
+    //Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Issuer")}");
+    //Console.WriteLine($"JWT: {Environment.GetEnvironmentVariable("JWT__Audience")}");
 
     builder.Configuration.AddEnvironmentVariables();
 }
